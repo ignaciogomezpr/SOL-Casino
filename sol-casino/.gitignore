@@ -1,0 +1,16 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# IDL
+target/idl/
+target/types/
+
+# Logs
+.DS_Store
+test-ledger/
+
+# Node
+node_modules/
+
