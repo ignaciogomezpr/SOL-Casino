@@ -7,8 +7,46 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod sol_casino {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Sol Casino program initialized!");
+    /// Initialize the game with configuration and create vault PDA
+    pub fn init_game(
+        ctx: Context<InitGame>,
+        house_edge_bps: u16,
+        min_bet: u64,
+        max_bet: u64,
+        max_exposure_bps: u16,
+    ) -> Result<()> {
+        let game_config = &mut ctx.accounts.game_config;
+        let vault = &mut ctx.accounts.vault;
+
+        // Validate parameters
+        require!(house_edge_bps <= 1000, CasinoError::InvalidHouseEdge); // Max 10%
+        require!(min_bet > 0, CasinoError::InvalidBetAmount);
+        require!(max_bet >= min_bet, CasinoError::InvalidBetAmount);
+        require!(max_exposure_bps > 0 && max_exposure_bps <= 10000, CasinoError::InvalidExposure); // Max 100%
+
+        // Initialize game config
+        game_config.admin = ctx.accounts.admin.key();
+        game_config.house_edge_bps = house_edge_bps;
+        game_config.min_bet = min_bet;
+        game_config.max_bet = max_bet;
+        game_config.max_exposure_bps = max_exposure_bps;
+        game_config.paused = false;
+        game_config.vault_bump = ctx.bumps.vault;
+        game_config.vrf_account = None; // Will be set later
+
+        // Initialize vault
+        vault.balance = 0;
+        vault.total_bets = 0;
+        vault.total_volume = 0;
+
+        msg!(
+            "Game initialized: admin={}, house_edge={}bps, min_bet={}, max_bet={}",
+            game_config.admin,
+            house_edge_bps,
+            min_bet,
+            max_bet
+        );
+
         Ok(())
     }
 }
@@ -96,5 +134,69 @@ impl Bet {
         8;                           // timestamp
 }
 
+// Seeds for PDAs
+pub const GAME_CONFIG_SEED: &[u8] = b"game_config";
+pub const VAULT_SEED: &[u8] = b"vault";
+
 #[derive(Accounts)]
-pub struct Initialize {}
+pub struct InitGame<'info> {
+    #[account(
+        init,
+        payer = admin,
+        space = GameConfig::SIZE,
+        seeds = [GAME_CONFIG_SEED],
+        bump
+    )]
+    pub game_config: Account<'info, GameConfig>,
+
+    #[account(
+        init,
+        payer = admin,
+        space = Vault::SIZE,
+        seeds = [VAULT_SEED],
+        bump
+    )]
+    pub vault: Account<'info, Vault>,
+
+    #[account(mut)]
+    pub admin: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+// Custom error codes
+#[error_code]
+pub enum CasinoError {
+    #[msg("Invalid house edge: must be between 0 and 1000 basis points (0-10%)")]
+    InvalidHouseEdge,
+    
+    #[msg("Invalid bet amount: min_bet must be > 0 and max_bet >= min_bet")]
+    InvalidBetAmount,
+    
+    #[msg("Invalid max exposure: must be between 1 and 10000 basis points (0.01-100%)")]
+    InvalidExposure,
+    
+    #[msg("Game is paused")]
+    GamePaused,
+    
+    #[msg("Bet amount below minimum")]
+    BetTooSmall,
+    
+    #[msg("Bet amount above maximum")]
+    BetTooLarge,
+    
+    #[msg("Bet exceeds max exposure limit")]
+    BetExceedsExposure,
+    
+    #[msg("Insufficient vault balance for payout")]
+    InsufficientVaultBalance,
+    
+    #[msg("Unauthorized: admin only")]
+    Unauthorized,
+    
+    #[msg("Bet already settled")]
+    BetAlreadySettled,
+    
+    #[msg("Bet not ready for settlement")]
+    BetNotReady,
+}
