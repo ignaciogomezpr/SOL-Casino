@@ -1,0 +1,93 @@
+Streaming transaction logs mentioning G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF. Confirmed commitment
+Transaction executed in slot 3:
+  Signature: 2qfgj9YahzqXa4BomQDmD86Ss1MaxjngZPMfUavruXfX748vJc2j2Mi9MZ2je8FrsUzM8P9RxDZZG9TczCNKT9V6
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: InitGame
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Game initialized: admin=7uuhonQissaGiwhaEh5DVCLmzgHpJ5J7ihm67CTkK7SU, house_edge=200bps, min_bet=100000000, max_bet=10000000000
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 16484 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success
+Transaction executed in slot 4:
+  Signature: 2qfgj9YahzqXa4BomQDmD86Ss1MaxjngZPMfUavruXfX748vJc2j2Mi9MZ2je8FrsUzM8P9RxDZZG9TczCNKT9V6
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: InitGame
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Game initialized: admin=7uuhonQissaGiwhaEh5DVCLmzgHpJ5J7ihm67CTkK7SU, house_edge=200bps, min_bet=100000000, max_bet=10000000000
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 16484 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success
+Transaction executed in slot 5:
+  Signature: 4A4pTp2ah8xGHNKYaAzgoofu3REx7a8o7FGumsz2WMYCEBSr5zcvanP21azEkjAKb1ko7rStB1B2uE2sHMraNrmq
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: PlaceBet
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Bet placed: player=2si5Gvi4izHi9XRzdj5fRzWv2y5e1aFHv1APzYpQDAnP, type=Under, amount=100000000
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 19012 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success
+Transaction executed in slot 6:
+  Signature: 4A4pTp2ah8xGHNKYaAzgoofu3REx7a8o7FGumsz2WMYCEBSr5zcvanP21azEkjAKb1ko7rStB1B2uE2sHMraNrmq
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: PlaceBet
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Bet placed: player=2si5Gvi4izHi9XRzdj5fRzWv2y5e1aFHv1APzYpQDAnP, type=Under, amount=100000000
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 19012 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success
+Transaction executed in slot 7:
+  Signature: 5GrBpLzZnwkX4T5ZAnyYbbtNk4JqMKYzXM3itK5ACz465kRqNvbiRvN8fqmown1pC6QuxU2ZufhWMBzfkhA3coNW
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: PlaceBet
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Bet placed: player=2si5Gvi4izHi9XRzdj5fRzWv2y5e1aFHv1APzYpQDAnP, type=Over, amount=100000000
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 20512 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success
+Transaction executed in slot 8:
+  Signature: iMnxWqnbZJZrbfvacrBKUb1SekKzS3r2QixwZo82TKLPNneEtxbEwQ5httsYSZ6jTLms7y66smfs5j2BZmxMWDk
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: RequestRandomness
+    Program log: Randomness requested for bet: 2si5Gvi4izHi9XRzdj5fRzWv2y5e1aFHv1APzYpQDAnP
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 9997 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success
+Transaction executed in slot 8:
+  Signature: 62bcyhh5qPHTT9soZ1UjYoQ5z6PknQwKWp3gCKwiyNSZbncL7Vmh9yc7kzKqAV7Pt2Z4wC4L6gch3dN8nMesvKR6
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: ConsumeRandomness
+    Program log: Bet settled: player=2si5Gvi4izHi9XRzdj5fRzWv2y5e1aFHv1APzYpQDAnP, dice=5, won=false, payout=0
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 14972 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success
+Transaction executed in slot 9:
+  Signature: 62bcyhh5qPHTT9soZ1UjYoQ5z6PknQwKWp3gCKwiyNSZbncL7Vmh9yc7kzKqAV7Pt2Z4wC4L6gch3dN8nMesvKR6
+  Status: Ok
+  Log Messages:
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF invoke [1]
+    Program log: Instruction: ConsumeRandomness
+    Program log: Bet settled: player=2si5Gvi4izHi9XRzdj5fRzWv2y5e1aFHv1APzYpQDAnP, dice=5, won=false, payout=0
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF consumed 14972 of 200000 compute units
+    Program G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF success

@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF");
 
 #[program]
 pub mod sol_casino {
@@ -49,10 +48,205 @@ pub mod sol_casino {
 
         Ok(())
     }
+
+    /// Place a bet on the dice roll game
+    pub fn place_bet(
+        ctx: Context<PlaceBet>,
+        bet_type: BetType,
+        amount: u64,
+    ) -> Result<()> {
+        let game_config = &ctx.accounts.game_config;
+        let vault = &mut ctx.accounts.vault;
+        let bet = &mut ctx.accounts.bet;
+        let player = &ctx.accounts.player;
+        let clock = Clock::get()?;
+
+        // Check if game is paused
+        require!(!game_config.paused, CasinoError::GamePaused);
+
+        // Validate bet amount
+        require!(amount >= game_config.min_bet, CasinoError::BetTooSmall);
+        require!(amount <= game_config.max_bet, CasinoError::BetTooLarge);
+
+        // Check max exposure limit
+        let vault_lamports = ctx.accounts.vault_system_account.lamports();
+        if vault_lamports > 0 {
+            let max_exposure = (vault_lamports as u128)
+                .checked_mul(game_config.max_exposure_bps as u128)
+                .unwrap()
+                .checked_div(10000)
+                .unwrap() as u64;
+            require!(amount <= max_exposure, CasinoError::BetExceedsExposure);
+        }
+
+        // Transfer SOL from player to vault using System Program
+        anchor_lang::solana_program::program::invoke(
+            &anchor_lang::solana_program::system_instruction::transfer(
+                ctx.accounts.player.key,
+                ctx.accounts.vault_system_account.key,
+                amount,
+            ),
+            &[
+                ctx.accounts.player.to_account_info(),
+                ctx.accounts.vault_system_account.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+        )?;
+
+        // Initialize bet account
+        bet.player = player.key();
+        bet.bet_type = bet_type;
+        bet.amount = amount;
+        bet.bet_index = vault.total_bets; // Store the bet index for PDA derivation
+        bet.status = BetStatus::Pending;
+        bet.vrf_request_key = None;
+        bet.dice_result = None;
+        bet.won = None;
+        bet.payout = None;
+        bet.timestamp = clock.unix_timestamp;
+
+        // Update vault statistics
+        vault.balance = vault.balance.checked_add(amount).unwrap();
+        vault.total_bets = vault.total_bets.checked_add(1).unwrap();
+        vault.total_volume = vault.total_volume.checked_add(amount).unwrap();
+
+        msg!(
+            "Bet placed: player={}, type={:?}, amount={}",
+            player.key(),
+            bet_type,
+            amount
+        );
+
+        Ok(())
+    }
+
+    /// Request randomness for a bet (simplified - in production would use Switchboard VRF)
+    pub fn request_randomness(ctx: Context<RequestRandomness>) -> Result<()> {
+        let bet = &mut ctx.accounts.bet;
+        let game_config = &ctx.accounts.game_config;
+
+        require!(bet.status == BetStatus::Pending, CasinoError::BetNotReady);
+        require!(!game_config.paused, CasinoError::GamePaused);
+
+        // In production, this would request randomness from Switchboard VRF
+        // For now, we'll use a simplified approach where randomness is provided
+        // The VRF account would be set in game_config.vrf_account
+        
+        bet.status = BetStatus::RandomnessRequested;
+        bet.vrf_request_key = Some(ctx.accounts.vrf_account.key());
+
+        msg!("Randomness requested for bet: {}", bet.player);
+
+        Ok(())
+    }
+
+    /// Consume randomness and settle the bet
+    pub fn consume_randomness(
+        ctx: Context<ConsumeRandomness>,
+        random_value: u64, // In production, this comes from VRF proof
+    ) -> Result<()> {
+        let bet = &mut ctx.accounts.bet;
+        let game_config = &ctx.accounts.game_config;
+        let vault = &mut ctx.accounts.vault;
+
+        require!(bet.status == BetStatus::RandomnessRequested, CasinoError::BetNotReady);
+        require!(!bet.won.is_some(), CasinoError::BetAlreadySettled);
+
+        // Convert random value to dice roll (2-12) using rejection sampling
+        // Two dice: each die is 1-6, so sum is 2-12
+        let dice_roll = ((random_value % 11) + 2) as u8; // 2-12
+
+        // Determine if player won based on bet type
+        let won = match bet.bet_type {
+            BetType::Under => dice_roll < 7,
+            BetType::Exactly => dice_roll == 7,
+            BetType::Over => dice_roll > 7,
+        };
+
+        // Calculate payout with house edge
+        let payout = if won {
+            let multiplier = match bet.bet_type {
+                BetType::Under | BetType::Over => 235, // 2.35x (including stake)
+                BetType::Exactly => 588, // 5.88x (including stake)
+            };
+            
+            // Apply house edge: reduce payout by house_edge_bps
+            let base_payout = (bet.amount as u128)
+                .checked_mul(multiplier as u128)
+                .unwrap()
+                .checked_div(100)
+                .unwrap();
+            
+            let house_edge_deduction = base_payout
+                .checked_mul(game_config.house_edge_bps as u128)
+                .unwrap()
+                .checked_div(10000)
+                .unwrap();
+            
+            (base_payout.checked_sub(house_edge_deduction).unwrap()) as u64
+        } else {
+            0
+        };
+
+        // Check if vault has enough funds for payout
+        let vault_lamports = ctx.accounts.vault_system_account.lamports();
+        if won && payout > 0 {
+            require!(
+                vault_lamports >= payout,
+                CasinoError::InsufficientVaultBalance
+            );
+        }
+
+        // Update bet with results
+        bet.dice_result = Some(dice_roll);
+        bet.won = Some(won);
+        bet.payout = Some(payout);
+        bet.status = BetStatus::Settled;
+
+        // Transfer payout if player won using System Program CPI with PDA signer
+        if won && payout > 0 {
+            // Create a CPI to transfer from vault (PDA) to player
+            // Since vault is a PDA, we need to sign with the PDA seeds
+            // Seeds must match exactly: [VAULT_SEED] with the bump
+            let vault_bump = ctx.accounts.game_config.vault_bump;
+            let seeds = &[
+                VAULT_SEED,
+                &[vault_bump],
+            ];
+            let signer_seeds = &[&seeds[..]];
+            
+            anchor_lang::solana_program::program::invoke_signed(
+                &anchor_lang::solana_program::system_instruction::transfer(
+                    ctx.accounts.vault_system_account.key,
+                    ctx.accounts.player.key,
+                    payout,
+                ),
+                &[
+                    ctx.accounts.vault_system_account.to_account_info(),
+                    ctx.accounts.player.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+                signer_seeds,
+            )?;
+            
+            // Update vault balance (this is just metadata, not actual SOL)
+            vault.balance = vault.balance.checked_sub(payout).unwrap();
+        }
+
+        msg!(
+            "Bet settled: player={}, dice={}, won={}, payout={}",
+            bet.player,
+            dice_roll,
+            won,
+            payout
+        );
+
+        Ok(())
+    }
 }
 
 // Bet types: Over 7, Under 7, or Exactly 7
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum BetType {
     Under,  // 2-6
     Exactly, // 7
@@ -113,6 +307,7 @@ pub struct Bet {
     pub player: Pubkey,              // Player who placed the bet
     pub bet_type: BetType,           // Over/Under/Exactly 7
     pub amount: u64,                 // Bet amount in lamports
+    pub bet_index: u64,              // Index of this bet (vault.total_bets at creation time)
     pub status: BetStatus,           // Current bet status
     pub vrf_request_key: Option<Pubkey>, // VRF request account (when randomness requested)
     pub dice_result: Option<u8>,     // Final dice roll result (2-12) after settlement
@@ -126,6 +321,7 @@ impl Bet {
         32 +                         // player
         1 +                          // bet_type
         8 +                          // amount
+        8 +                          // bet_index
         1 +                          // status
         1 + 32 +                     // Option<Pubkey> vrf_request_key
         1 + 1 +                      // Option<u8> dice_result
@@ -137,6 +333,7 @@ impl Bet {
 // Seeds for PDAs
 pub const GAME_CONFIG_SEED: &[u8] = b"game_config";
 pub const VAULT_SEED: &[u8] = b"vault";
+pub const BET_SEED: &[u8] = b"bet";
 
 #[derive(Accounts)]
 pub struct InitGame<'info> {
@@ -149,6 +346,8 @@ pub struct InitGame<'info> {
     )]
     pub game_config: Account<'info, GameConfig>,
 
+    /// Vault PDA that stores metadata (balance, total_bets, etc.)
+    /// This is a program-owned account that can also hold SOL
     #[account(
         init,
         payer = admin,
@@ -160,6 +359,106 @@ pub struct InitGame<'info> {
 
     #[account(mut)]
     pub admin: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct PlaceBet<'info> {
+    #[account(
+        seeds = [GAME_CONFIG_SEED],
+        bump
+    )]
+    pub game_config: Account<'info, GameConfig>,
+
+    /// Vault PDA that stores metadata (balance, total_bets, total_volume)
+    /// This is the same PDA as vault_system_account but as a typed account
+    #[account(
+        mut,
+        seeds = [VAULT_SEED],
+        bump = game_config.vault_bump
+    )]
+    pub vault: Account<'info, Vault>,
+
+    /// CHECK: Vault PDA as SystemAccount - same address as vault but used for SOL transfers
+    /// This account holds the actual SOL and is used in CPI transfers
+    #[account(
+        mut,
+        seeds = [VAULT_SEED],
+        bump = game_config.vault_bump
+    )]
+    pub vault_system_account: UncheckedAccount<'info>,
+
+    #[account(
+        init,
+        payer = player,
+        space = Bet::SIZE,
+        seeds = [BET_SEED, player.key().as_ref(), vault.total_bets.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub bet: Account<'info, Bet>,
+
+    #[account(mut)]
+    pub player: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct RequestRandomness<'info> {
+    #[account(
+        seeds = [GAME_CONFIG_SEED],
+        bump
+    )]
+    pub game_config: Account<'info, GameConfig>,
+
+    #[account(
+        mut,
+        seeds = [BET_SEED, bet.player.as_ref(), bet.bet_index.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub bet: Account<'info, Bet>,
+
+    /// CHECK: VRF account (Switchboard or other)
+    pub vrf_account: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct ConsumeRandomness<'info> {
+    #[account(
+        seeds = [GAME_CONFIG_SEED],
+        bump
+    )]
+    pub game_config: Account<'info, GameConfig>,
+
+    /// Vault PDA that stores metadata (balance, total_bets, total_volume)
+    /// This is the same PDA as vault_system_account but as a typed account
+    #[account(
+        mut,
+        seeds = [VAULT_SEED],
+        bump = game_config.vault_bump
+    )]
+    pub vault: Account<'info, Vault>,
+
+    /// CHECK: Vault PDA as SystemAccount - same address as vault but used for SOL transfers
+    /// This account holds the actual SOL and is used in CPI transfers
+    #[account(
+        mut,
+        seeds = [VAULT_SEED],
+        bump = game_config.vault_bump
+    )]
+    pub vault_system_account: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        seeds = [BET_SEED, bet.player.as_ref(), bet.bet_index.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub bet: Account<'info, Bet>,
+
+    /// CHECK: Player account to receive payout
+    #[account(mut)]
+    pub player: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }
