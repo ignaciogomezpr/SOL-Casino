@@ -22,7 +22,6 @@ interface BetResult {
   betType: string;
 }
 
-// Component to display actual vault balance
 function VaultBalanceDisplay({ vaultPda, connection, gameConfig }: { vaultPda: PublicKey; connection: any; gameConfig: any }) {
   const [vaultLamports, setVaultLamports] = React.useState<number | null>(null);
 
@@ -112,7 +111,6 @@ function App() {
     setLogs(prev => [...prev, { action, signature, error, timestamp: new Date() }]);
   }, []);
 
-  // Check RPC health on mount and when connection changes
   React.useEffect(() => {
     let mounted = true;
     
@@ -141,7 +139,6 @@ function App() {
     };
     
     checkHealth();
-    // Re-check every 30 seconds
     const interval = setInterval(checkHealth, 30000);
     
     return () => {
@@ -181,7 +178,6 @@ function App() {
     }
   }, [wallet, connection]);
 
-  // Check game status when wallet connects
   React.useEffect(() => {
     if (wallet.publicKey) {
       checkGameStatus();
@@ -243,11 +239,8 @@ function App() {
         return;
       }
 
-      // Derive PDAs
       const [gameConfigPda] = getGameConfigPda();
       const [vaultPda] = getVaultPda();
-
-      // Check RPC health before sending (use connection from context)
       const health = await checkRpcHealth(connection, 5000);
       if (!health.healthy) {
         addLog('Init Game', undefined, `RPC Error: ${health.error || 'Connection failed'}`);
@@ -282,7 +275,6 @@ function App() {
     }
   }, [wallet, houseEdgeBps, minBetLamports, maxBetLamports, maxExposureBps, connection, addLog, checkGameStatus]);
 
-  // Fetch bet result and show modal
   const fetchBetResult = useCallback(async (betPda: PublicKey, betAmount: number, betTypeStr: string) => {
     const program = getProgram(wallet, connection);
     if (!program) return;
@@ -321,15 +313,12 @@ function App() {
 
       setBetResult(result);
       setShowResultModal(true);
-      
-      // Refresh game status
       await checkGameStatus();
     } catch (err) {
       addLog('Fetch Result', undefined, extractError(err));
     }
   }, [wallet, connection, addLog, checkGameStatus]);
 
-  // Settle bet: request randomness and consume it
   const settleBet = useCallback(async (betPda: PublicKey, betIndex: number, betAmount: number, betTypeStr: string) => {
     if (!wallet.publicKey || !wallet.signTransaction) {
       addLog('Settle Bet', undefined, 'Wallet not connected');
@@ -346,10 +335,8 @@ function App() {
       const [gameConfigPda] = getGameConfigPda();
       const [vaultPda] = getVaultPda();
       
-      // Use player's account as VRF account (simplified - in production would use real VRF)
       const vrfAccount = wallet.publicKey;
       
-      // Step 1: Request randomness
       addLog('Settle Bet', undefined, 'Requesting randomness...');
       const requestSig = await program.methods
         .requestRandomness()
@@ -363,8 +350,6 @@ function App() {
       await connection.confirmTransaction(requestSig, 'confirmed');
       addLog('Settle Bet', requestSig, 'Randomness requested');
       
-      // Step 2: Generate random value and consume randomness
-      // In production, this would come from VRF proof
       const randomValue = new BN(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
       
       addLog('Settle Bet', undefined, 'Settling bet...');
@@ -412,11 +397,8 @@ function App() {
         return;
       }
 
-      // Derive PDAs
       const [gameConfigPda] = getGameConfigPda();
       const [vaultPda] = getVaultPda();
-
-      // Fetch vault and game config to validate bet
       let vault;
       let gameConfig;
       try {
@@ -451,7 +433,6 @@ function App() {
           return;
         }
       }
-      // If vault has 0 SOL, the program skips the exposure check, so bets are allowed
 
       const betIndex = Number(vault.totalBets);
       const [betPda] = getBetPda(wallet.publicKey, betIndex);
@@ -506,7 +487,6 @@ function App() {
             margin: '0 auto'
           }}
           onError={(e) => {
-            // Fallback: show text logo if image doesn't exist
             const img = e.target as HTMLImageElement;
             img.style.display = 'none';
             const parent = img.parentElement;
@@ -732,7 +712,6 @@ function App() {
         )}
       </div>
 
-      {/* Bet Result Modal */}
       {showResultModal && betResult && (
         <div style={{
           position: 'fixed',

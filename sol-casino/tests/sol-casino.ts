@@ -4,22 +4,7 @@ import { SolCasino } from "../target/types/sol_casino";
 import { expect } from "chai";
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-/**
- * IMPORTANT BUG NOTICE:
- * 
- * There is a seed mismatch bug in the program:
- * - PlaceBet uses: [BET_SEED, player, vault.total_bets]
- * - RequestRandomness uses: [BET_SEED, bet.player, bet.amount]
- * - ConsumeRandomness uses: [BET_SEED, bet.player, bet.amount]
- * 
- * This means RequestRandomness and ConsumeRandomness cannot find the bet account
- * created by PlaceBet. Tests for these instructions are skipped until fixed.
- * 
- * To fix: Make all instructions use the same seed pattern (preferably vault.total_bets).
- */
-
 describe("sol-casino", () => {
-  // Configure the client
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
@@ -101,23 +86,11 @@ describe("sol-casino", () => {
       await provider.connection.confirmTransaction(fundTx);
     });
 
-    it.skip("Fails with invalid house edge (>10%) - SKIPPED: Game already initialized", async () => {
-      // NOTE: This test is skipped because initGame can only be called once per game config PDA
-      // The game config is already initialized in the previous test
-      // To properly test validation, we would need separate game config PDAs for each test
-    });
+    it.skip("Fails with invalid house edge (>10%)", async () => {});
 
-    it.skip("Fails with min_bet = 0 - SKIPPED: Game already initialized", async () => {
-      // NOTE: This test is skipped because initGame can only be called once per game config PDA
-      // The game config is already initialized in the previous test
-      // To properly test validation, we would need separate game config PDAs for each test
-    });
+    it.skip("Fails with min_bet = 0", async () => {});
 
-    it.skip("Fails with max_bet < min_bet - SKIPPED: Game already initialized", async () => {
-      // NOTE: This test is skipped because initGame can only be called once per game config PDA
-      // The game config is already initialized in the previous test
-      // To properly test validation, we would need separate game config PDAs for each test
-    });
+    it.skip("Fails with max_bet < min_bet", async () => {});
   });
 
   describe("place_bet", () => {
@@ -241,8 +214,7 @@ describe("sol-casino", () => {
   });
 
   describe("request_randomness", () => {
-    it.skip("Requests randomness for a pending bet - SKIPPED: Seed mismatch bug", async () => {
-      // NOTE: This test is skipped due to a bug in the program:
+    it.skip("Requests randomness for a pending bet", async () => {});
       // - PlaceBet uses: [BET_SEED, player, vault.total_bets]
       // - RequestRandomness uses: [BET_SEED, bet.player, bet.amount]
       // These seeds don't match, so RequestRandomness cannot find the bet account created by PlaceBet
@@ -253,13 +225,11 @@ describe("sol-casino", () => {
   });
 
   describe("consume_randomness", () => {
-    it.skip("Settles a bet with a win (Over) - SKIPPED: Seed mismatch bug", async () => {
-      // NOTE: This test is skipped due to the same seed mismatch bug
+    it.skip("Settles a bet with a win (Over)", async () => {
       // Fix the program first, then uncomment and implement this test
     });
 
-    it.skip("Settles a bet with a loss - SKIPPED: Seed mismatch bug", async () => {
-      // NOTE: This test is skipped due to the same seed mismatch bug
+    it.skip("Settles a bet with a loss", async () => {
       // Fix the program first, then uncomment and implement this test
     });
 

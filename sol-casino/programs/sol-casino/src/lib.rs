@@ -79,13 +79,9 @@ pub mod sol_casino {
             require!(amount <= max_exposure, CasinoError::BetExceedsExposure);
         }
 
-        // Read bet index BEFORE modifying vault (needed for bet account seeds)
-        // Note: Anchor's init constraint already created the bet account using vault.total_bets
-        // at instruction start, so we use that value here
         let bet_index = vault.total_bets;
 
-        // Transfer SOL from player to vault using System Program
-        // Do this FIRST before modifying bet account to avoid conflicts with Anchor's init constraint
+        // Transfer SOL from player to vault
         anchor_lang::solana_program::program::invoke(
             &anchor_lang::solana_program::system_instruction::transfer(
                 ctx.accounts.player.key,
