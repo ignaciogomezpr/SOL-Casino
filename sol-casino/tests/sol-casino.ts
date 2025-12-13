@@ -225,13 +225,9 @@ describe("sol-casino", () => {
   });
 
   describe("consume_randomness", () => {
-    it.skip("Settles a bet with a win (Over)", async () => {
-      // Fix the program first, then uncomment and implement this test
-    });
+    it.skip("Settles a bet with a win (Over)", async () => {});
 
-    it.skip("Settles a bet with a loss", async () => {
-      // Fix the program first, then uncomment and implement this test
-    });
+    it.skip("Settles a bet with a loss", async () => {});
 
     it("Settles a bet with a loss", async () => {
       // Place a bet

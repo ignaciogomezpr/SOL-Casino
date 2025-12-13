@@ -467,7 +467,6 @@ function App() {
     }
   }, [wallet, betAmountLamports, betType, connection, addLog, checkGameStatus, settleBet]);
 
-  // Derive PDAs for display
   const [gameConfigPda] = getGameConfigPda();
   const [vaultPda] = getVaultPda();
 
