@@ -79,7 +79,13 @@ pub mod sol_casino {
             require!(amount <= max_exposure, CasinoError::BetExceedsExposure);
         }
 
+        // Read bet index BEFORE modifying vault (needed for bet account seeds)
+        // Note: Anchor's init constraint already created the bet account using vault.total_bets
+        // at instruction start, so we use that value here
+        let bet_index = vault.total_bets;
+
         // Transfer SOL from player to vault using System Program
+        // Do this FIRST before modifying bet account to avoid conflicts with Anchor's init constraint
         anchor_lang::solana_program::program::invoke(
             &anchor_lang::solana_program::system_instruction::transfer(
                 ctx.accounts.player.key,
@@ -93,11 +99,11 @@ pub mod sol_casino {
             ],
         )?;
 
-        // Initialize bet account
+        // Initialize bet account data (account was already created by Anchor's init constraint)
         bet.player = player.key();
         bet.bet_type = bet_type;
         bet.amount = amount;
-        bet.bet_index = vault.total_bets; // Store the bet index for PDA derivation
+        bet.bet_index = bet_index; // Store the bet index for PDA derivation
         bet.status = BetStatus::Pending;
         bet.vrf_request_key = None;
         bet.dice_result = None;
@@ -105,7 +111,7 @@ pub mod sol_casino {
         bet.payout = None;
         bet.timestamp = clock.unix_timestamp;
 
-        // Update vault statistics
+        // Update vault statistics AFTER transfer
         vault.balance = vault.balance.checked_add(amount).unwrap();
         vault.total_bets = vault.total_bets.checked_add(1).unwrap();
         vault.total_volume = vault.total_volume.checked_add(amount).unwrap();

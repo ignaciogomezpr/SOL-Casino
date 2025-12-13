@@ -1,0 +1,689 @@
+{
+  "address": "G13mbtq9JT6mh4XbecqD9WN8SvdVtvfSKyQ3J6wmLxmF",
+  "metadata": {
+    "name": "sol_casino",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "consume_randomness",
+      "docs": [
+        "Consume randomness and settle the bet"
+      ],
+      "discriminator": [
+        190,
+        217,
+        49,
+        162,
+        99,
+        26,
+        73,
+        234
+      ],
+      "accounts": [
+        {
+          "name": "game_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault PDA that stores metadata (balance, total_bets, total_volume)",
+            "This is the same PDA as vault_system_account but as a typed account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_system_account",
+          "docs": [
+            "This account holds the actual SOL and is used in CPI transfers"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bet.player",
+                "account": "Bet"
+              },
+              {
+                "kind": "account",
+                "path": "bet.bet_index",
+                "account": "Bet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "random_value",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "init_game",
+      "docs": [
+        "Initialize the game with configuration and create vault PDA"
+      ],
+      "discriminator": [
+        251,
+        46,
+        12,
+        208,
+        184,
+        148,
+        157,
+        73
+      ],
+      "accounts": [
+        {
+          "name": "game_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault PDA that stores metadata (balance, total_bets, etc.)",
+            "This is a program-owned account that can also hold SOL"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "house_edge_bps",
+          "type": "u16"
+        },
+        {
+          "name": "min_bet",
+          "type": "u64"
+        },
+        {
+          "name": "max_bet",
+          "type": "u64"
+        },
+        {
+          "name": "max_exposure_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "place_bet",
+      "docs": [
+        "Place a bet on the dice roll game"
+      ],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        63,
+        166,
+        126,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "game_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault PDA that stores metadata (balance, total_bets, total_volume)",
+            "This is the same PDA as vault_system_account but as a typed account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_system_account",
+          "docs": [
+            "This account holds the actual SOL and is used in CPI transfers"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              },
+              {
+                "kind": "account",
+                "path": "vault.total_bets",
+                "account": "Vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "bet_type",
+          "type": {
+            "defined": {
+              "name": "BetType"
+            }
+          }
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "request_randomness",
+      "docs": [
+        "Request randomness for a bet (simplified - in production would use Switchboard VRF)"
+      ],
+      "discriminator": [
+        213,
+        5,
+        173,
+        166,
+        37,
+        236,
+        31,
+        18
+      ],
+      "accounts": [
+        {
+          "name": "game_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bet.player",
+                "account": "Bet"
+              },
+              {
+                "kind": "account",
+                "path": "bet.bet_index",
+                "account": "Bet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrf_account"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Bet",
+      "discriminator": [
+        147,
+        23,
+        35,
+        59,
+        15,
+        75,
+        155,
+        32
+      ]
+    },
+    {
+      "name": "GameConfig",
+      "discriminator": [
+        45,
+        146,
+        146,
+        33,
+        170,
+        69,
+        96,
+        133
+      ]
+    },
+    {
+      "name": "Vault",
+      "discriminator": [
+        211,
+        8,
+        232,
+        43,
+        2,
+        152,
+        117,
+        119
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidHouseEdge",
+      "msg": "Invalid house edge: must be between 0 and 1000 basis points (0-10%)"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidBetAmount",
+      "msg": "Invalid bet amount: min_bet must be > 0 and max_bet >= min_bet"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidExposure",
+      "msg": "Invalid max exposure: must be between 1 and 10000 basis points (0.01-100%)"
+    },
+    {
+      "code": 6003,
+      "name": "GamePaused",
+      "msg": "Game is paused"
+    },
+    {
+      "code": 6004,
+      "name": "BetTooSmall",
+      "msg": "Bet amount below minimum"
+    },
+    {
+      "code": 6005,
+      "name": "BetTooLarge",
+      "msg": "Bet amount above maximum"
+    },
+    {
+      "code": 6006,
+      "name": "BetExceedsExposure",
+      "msg": "Bet exceeds max exposure limit"
+    },
+    {
+      "code": 6007,
+      "name": "InsufficientVaultBalance",
+      "msg": "Insufficient vault balance for payout"
+    },
+    {
+      "code": 6008,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: admin only"
+    },
+    {
+      "code": 6009,
+      "name": "BetAlreadySettled",
+      "msg": "Bet already settled"
+    },
+    {
+      "code": 6010,
+      "name": "BetNotReady",
+      "msg": "Bet not ready for settlement"
+    }
+  ],
+  "types": [
+    {
+      "name": "Bet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_type",
+            "type": {
+              "defined": {
+                "name": "BetType"
+              }
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "bet_index",
+            "type": "u64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "BetStatus"
+              }
+            }
+          },
+          {
+            "name": "vrf_request_key",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "dice_result",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "won",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "payout",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "RandomnessRequested"
+          },
+          {
+            "name": "Settled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Under"
+          },
+          {
+            "name": "Exactly"
+          },
+          {
+            "name": "Over"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "house_edge_bps",
+            "type": "u16"
+          },
+          {
+            "name": "min_bet",
+            "type": "u64"
+          },
+          {
+            "name": "max_bet",
+            "type": "u64"
+          },
+          {
+            "name": "max_exposure_bps",
+            "type": "u16"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "vault_bump",
+            "type": "u8"
+          },
+          {
+            "name": "vrf_account",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "total_bets",
+            "type": "u64"
+          },
+          {
+            "name": "total_volume",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

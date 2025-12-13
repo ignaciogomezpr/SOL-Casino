@@ -179,3 +179,4 @@ After these fixes, the program should:
 - Successfully transfer SOL from player to vault via CPI
 - Successfully transfer SOL from vault to player via CPI with PDA signer
 - No longer throw "instruction spent from the balance of an account it does not own" errors
+
