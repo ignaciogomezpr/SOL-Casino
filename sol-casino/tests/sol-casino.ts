@@ -215,13 +215,6 @@ describe("sol-casino", () => {
 
   describe("request_randomness", () => {
     it.skip("Requests randomness for a pending bet", async () => {});
-      // - PlaceBet uses: [BET_SEED, player, vault.total_bets]
-      // - RequestRandomness uses: [BET_SEED, bet.player, bet.amount]
-      // These seeds don't match, so RequestRandomness cannot find the bet account created by PlaceBet
-      // 
-      // To fix: Update RequestRandomness and ConsumeRandomness to use vault.total_bets instead of bet.amount
-      // OR update PlaceBet to use a different seed pattern
-    });
   });
 
   describe("consume_randomness", () => {
